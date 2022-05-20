@@ -48,18 +48,27 @@ namespace TownstarExtensions {
     type ExtensionType = { new(replacing: IExtension): IExtension; current?: IExtension; }
 
     interface IExtension {
+        /** Triggers when the API is started, or restarted. */
         start(): boolean;
+        /** Triggers when the API stops, such as just before upgrading. */
         stop(): boolean;
-        onTimer?(): Generator; // (runs once each second)
-        /** Should return a configuration body for the extension. */
+        /** Runs once each second (time may be different if 'Timer Delay' configuration is changed). */
+        onTimer?(): Generator;
+        /** Should return a configuration HTML body for the extension (no title required as it is added automatically).
+         * Use the `API.create...()` functions to create input elements for configurations. See other implementations for examples. */
         getConfig(): HTMLElement;
-        started: boolean;
+        /** The API uses this to determine if the extension has started. This should be set to true by the extension after is starts successfully. If not, and API will assume it is not running. */
+        readonly started: boolean;
     }
 
     interface IRegisteredExtension {
+        /** The name of the extension. */
         name: string;
+        /** The extension instance. */
         extension: IExtension;
+        /** After an in-process upgrade, previously started extensions will restart. */
         wasStarted: boolean;
+        /** References an onTimer() generator function (to support async). */
         process?: Generator;
     }
 
@@ -84,7 +93,7 @@ namespace TownstarExtensions {
 
         static get townExists() { return !!Game.town; }
 
-        static async hash(value: string) {
+        static async hash(value: string) { // (no longer used at the moment)
             const msgUint8 = new TextEncoder().encode(value);                           // encode as (utf-8) Uint8Array
             const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);           // hash the message
             const hashArray = Array.from(new Uint8Array(hashBuffer));                     // convert buffer to byte array

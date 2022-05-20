@@ -33,7 +33,6 @@ _(best for cases when Gala restarts the game after an update):_
  3. Paste the link above into "Import from URL", then click 'Install'; that's it! Enjoy. :wink:
 
 # How to Install Manually
-
 1. Run the Town Star game.
 2. Press F12 to open the dev console.
 3. Click to focus the console tab.
@@ -41,3 +40,13 @@ _(best for cases when Gala restarts the game after an update):_
 5. Paste this script into the console prompt and execute it (hit enter).
 
 *Warning: this option only works until the game refreshes.*
+
+# Extending
+See `KeyBindings` implementation of `IExtension` as a simple example of writing an extension.
+
+# Contributing
+The Discord community may vote to include new extensions. Pull requests will not be accepted otherwise, except for bug fixes. 
+
+Development was done using Visual Studio Code, which is a free download here: https://code.visualstudio.com
+
+I wrote a command utility named `export_vscode_extensions.cmd` to export the extensions I'm currently using. It creates a file named `install_extensions.cmd` which you can run to install them if you wish to setup the same environment as mine. There may be extensions not needed for every project, so feel free to edit it to remove anything you don't need/want.
