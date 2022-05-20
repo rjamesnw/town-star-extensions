@@ -22,7 +22,7 @@ Sell script is deployed here for now: https://havenbot.ngrok.io/ts/tse.js
 * The script will automatically collect the payment from the depots.
 * You can now save your towns under a name (using the same name overwrites the previous save).  Press "s" and scroll to the bottom to see the save button. You can then go to #🤖bot-commands on the Haven Discord server and type `h.ts town`. The Haven bot will send a DM to you with your saved names. You can then run `h.ts town "save name"` in #🤖bot-commands and the bot will send you an export to a JSON you can use to import into the [visualizer](https://ts.litwiller.io/) (maintained on Github [here](https://github.com/Litwilly/townstar-visualizer)). To import, open the visualizer page and paste into the edit box at the bottom and click `Load`.\
 \
-The bot will not accept saves from non-whitelisted users. Open the game, press F12, go to the console tab, select 'townstar.sandbox-games.com' from the dropdown at the top, then enter `Game.userId` to get your ID. Visit the #🤖bot-commands channel on Haven's Discord and type `h.tsscript 1a2b3c...`, replacing `1a2b3c...` with your user ID. After that you'll be whitelisted and able to save your town.\
+The bot will not accept saves from non-whitelisted users. Press S to open the config window and get your ID at the top. Visit the #🤖bot-commands channel on Haven's Discord and type `h.tsscript 1a2b3c...`, replacing `1a2b3c...` with your user ID. After that you'll be whitelisted and able to save your town.\
 \
 Note: There's another visualizer [here](https://kewlhwip.com/) to try in case the other doesn't work for you.
 
