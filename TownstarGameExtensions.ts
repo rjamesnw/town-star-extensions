@@ -1238,8 +1238,8 @@ namespace TownstarExtensions {
     const ITEM_PROPERTY_NAMES = [
         ['min', "Sell When >=", "Only sell when gas is equal or greather than this value."],
         ['gas', "and if gas >=", "Only sell also if available gas is >= this value."],
-        ['minForJimmy', "Enable Jimmies when >=", "Only enable neighbor transports when equal or greather this value."],
-        ['target', "Target:", "Try to keep this item count (if supported)."]
+        //! NO LONGER A THING // ['minForJimmy', "Enable Jimmies when >=", "Only enable neighbor transports when equal or greather this value."],
+        //! TURNS OFF THINGS THAT SHOULDN'T BE; NEEDS WORK, AND MAY TRIGGER THE 'LEDGER OF TRUTH' IN THE FUTURE // ['target', "Target:", "Try to keep this item count (if supported)."]
     ];
 
     export class Seller implements IExtension {
@@ -1663,31 +1663,15 @@ namespace TownstarExtensions {
         getConfig(): HTMLElement {
             if (!this.configPanel) {
                 console.log("Creating new Seller config panel ...");
+
                 // ... the config window doesn't exist yet ...
+
                 let configPanel = document.createElement('div');
 
-                let elements: HTMLElement[] = [];
-
-                let filterInput = <HTMLInputElement>document.createElement(`input`);
-                filterInput.type = 'text';
-                filterInput.placeholder = "Type here to filter the contents.";
-                filterInput.style.width = '256px';
-                filterInput.style.height = '18px';
-                filterInput.style.fontSize = '16px';
-                filterInput.style.border = '1px solid';
-                //filterInput.onmousedown = ev => ev.stopPropagation();
-                filterInput.onkeydown = ev => ev.stopPropagation();
-                filterInput.onkeyup = (ev) => {
-                    ev.stopPropagation();
-                    let value = filterInput.value.trim().toUpperCase();
-                    for (var el of elements)
-                        if ((<any>el).__ts_ext_config_title?.toUpperCase().indexOf(value) >= 0)
-                            el.style.display = "";
-                        else
-                            el.style.display = "none";
-                };
-
-                configPanel.appendChild(filterInput);
+                let userIdInfo = document.createElement('div');
+                userIdInfo.style.fontStyle = "italic";
+                userIdInfo.innerHTML = `Your Town Star user ID is ${Game.userId}.`;
+                configPanel.appendChild(userIdInfo);
 
                 {
                     let title = API.createTitleElement("Timer Delay (ms)");
@@ -1712,6 +1696,33 @@ namespace TownstarExtensions {
                     input.title = "How many timer triggers before selling is triggered (default is 3).";
                     configPanel.appendChild(title);
                     configPanel.appendChild(input);
+                }
+
+                let elements: HTMLElement[] = [];
+                {
+                    let title = API.createTitleElement("Craft Filter");
+
+                    let filterInput = <HTMLInputElement>document.createElement(`input`);
+                    filterInput.type = 'text';
+                    filterInput.placeholder = "Type here to filter the contents.";
+                    filterInput.style.width = '256px';
+                    filterInput.style.height = '18px';
+                    filterInput.style.fontSize = '16px';
+                    filterInput.style.border = '1px solid';
+                    //filterInput.onmousedown = ev => ev.stopPropagation();
+                    filterInput.onkeydown = ev => ev.stopPropagation();
+                    filterInput.onkeyup = (ev) => {
+                        ev.stopPropagation();
+                        let value = filterInput.value.trim().toUpperCase();
+                        for (var el of elements)
+                            if ((<any>el).__ts_ext_config_title?.toUpperCase().indexOf(value) >= 0)
+                                el.style.display = "";
+                            else
+                                el.style.display = "none";
+                    };
+
+                    configPanel.appendChild(title);
+                    configPanel.appendChild(filterInput);
                 }
 
                 for (let entry of this.getItems(true)) {
@@ -1982,7 +1993,8 @@ namespace TownstarExtensions {
 
                 configPanel.appendChild(document.createElement("br"));
 
-                var saveButton = API.createButtonElement("Save Town to Haven Server", "Saves your town to the Haven server under a name you specify.");
+                const buttonTitle = "Save Town to Haven Server";
+                var saveButton = API.createButtonElement(buttonTitle, "Saves your town to the Haven Discord server under a name you specify. Use Haven bot commands to get a JSON of it for the visualizer.");
                 saveButton.onclick = async (ev: Event) => {
                     ev.stopPropagation();
                     var saveName = prompt("Enter a save name. You can enter the same name as before to overwrite a previous save:")?.trim();
@@ -2010,10 +2022,13 @@ namespace TownstarExtensions {
                             savedOn: Date.now()
                         };
                         var result = await API.askBot<{ message: string }>("save town", Game.userId, saveName, townData);
-                        if (result.message == "OK")
-                            alert("Saved!");
-                        else
-                            alert("Your town did not save. You must associate your user ID with the Haven bot. If you haven't, visit the #bot-commands channel in the Haven discord server.");
+                        if (result.message == "OK") {
+                            saveButton.value = `Saved as "${saveName}"!`
+                            setTimeout(() => {
+                                saveButton.value = buttonTitle; // restore original title.
+                            }, 8000);
+                        } else
+                            alert("Your town did not save. You must associate your user ID with the Haven bot. If you haven't, visit the #bot-commands channel in the Haven discord server. You'll also need your user ID at the top of the config panel.");
                     }
                 }
                 configPanel.appendChild(saveButton);
@@ -2076,7 +2091,7 @@ namespace TownstarExtensions {
     //(<any>API).removeAllEdgeRequirements = function () {
     //    for (var p in Game.objectData)
     //        if ("EdgeRequirements" in Game.objectData[p]) Game.objectData[p].EdgeRequirements = "None";
-    //};
+    //}; // This is for testing purposes only on the free server.
 
     var _start = TownstarExtensions.start;
     TownstarExtensions.start = async function () {
