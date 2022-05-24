@@ -6,7 +6,7 @@
 // ==UserScript==
 // @name         Town Star Extension Scripts
 // @description  Scripts to extends Town Star.
-// @version      2.12.0
+// @version      2.13.0
 // @author       General Fault
 // @match        *://*.sandbox-games.com/*
 // @run-at document-idle
@@ -16,8 +16,8 @@
 // @supportURL   https://discord.gg/eZmpyHxfnW
 // ==/UserScript==
 //
-// Release notes: TownManager removed.
-var townstarExtensionsVersion = "2.12.0";
+// Release notes: Target system removed.
+var townstarExtensionsVersion = "2.13.0";
 var townstarExtensionsBotHost = "https://havenbot.ngrok.io";
 //var townstarExtensionsBotHost = "http://localhost:5531";
 
@@ -1862,10 +1862,11 @@ namespace TownstarExtensions {
             return task;
         }
 
+        /** Do a single task on each call. */
         private _doTask() {
             if (this._tasks.length) {
-                var task = this._removeTask(0);
-                var object = Game.town.objectDict[task.location];
+                var task = this._removeTask(0); // (get the first task in the queue)
+                var object = Game.town.objectDict[task.location]; // (get a reference to the object based on location)
                 console.log(`Doing task for location ${task.location}: ${('' + task.action).match(/[^(]+/)?.[0]}, Request: ${task.request}, Craft: ${task.craftType}, Priority: ${task.priority}`);
                 task.action.call(this, task, object);
             }
@@ -1887,62 +1888,73 @@ namespace TownstarExtensions {
             console.log(`Turned on a ${object.type.replace(/_/g, ' ')}.`);
         }
 
-        private _onAmmountChanged() {
+        private _onCheckConstructionCompleted(buildingObject: TS_Object) {
+            // ... check if this building needs to be completed ...
+
+            if (buildingObject.type == "Construction_Site" && buildingObject.data.state == "Complete" && API.get("autoCompleteConstruction", false)) {
+                this.addTask(this._task_completeBuild, null, "tap", buildingObject, 1);
+                return false; // (nothing more to do here)
+            }
+
+            return true;
+        }
+
+        private _checkTargets(buildingObject: TS_Object) {
+            // ... check items counts and targets ...
+
+            if (buildingObject.objData.Crafts && buildingObject.objData.Crafts != 'None') // (only check buildings that make crafts)
+                for (var item of Seller.current.getItems())
+                    if (item.settings.target > 0) { // (only check item if this is set to allow turning off for specific items)
+
+                        var targetReached = API.getItemQuantity(item.name) >= API.toNumber(item.settings.target, 0);
+
+                        //if (targetReached)
+                        //    console.log(`Target ${item.name} reached, will try to stop production ...`);
+                        //else
+                        //    console.log(`${item.name} is getting too low, will try to get more ...`);
+
+                        var targetCraft = item.name;
+
+                        if (item.name == "Wood") { // (need to handle wood a special way)
+                            var buildings = [Game.objectData["Windmill"]];
+                            targetCraft = ""; // (any)
+                            targetReached = !targetReached; // (invert this for wood - if we need more, turn off, not on!)
+                        }
+                        else buildings = [...item.settings.buildings];
+
+                        var buildingMatch = buildings.find(b => b.Name == buildingObject.objData.Name);
+                        if (!buildingMatch) continue; // (nothing to do with this building, move on)
+
+                        //var handled = true;
+
+                        if (targetReached) {
+                            if ((!targetCraft || buildingObject.logicObject.data?.craft == targetCraft) && buildingObject.logicObject.data?.state != "Produce") {
+                                this.addTask(this._task_turn_off, targetCraft, "stop", buildingObject);
+                            }
+                            //else handled = false;
+                        } else if (buildingObject.logicObject.data?.craft == "None") {
+                            let craft = (<any>buildingObject.logicObject).prevCraft || targetCraft;
+                            if (craft) {
+                                this.addTask(this._task_turn_on, targetCraft, "start", buildingObject);
+                            }
+                            else console.log(`A ${buildingMatch.Name.replace(/_/g, ' ')} could not be turned on as the craft type is unknown.`);
+                        }
+
+                        //if (!handled)
+                        //    console.log("No building found that can be turned on/off to help with that.");
+                        // (else we can't complete the state change yet, so try next time)
+                    }
+        }
+
+        private _analyzeTownObjects() {
             if (this.started) {
 
                 for (var buildingObject of API.getAllTownObjects()) {
 
-                    // ... check if this building needs to be completed ...
-
-                    if (buildingObject.type == "Construction_Site" && buildingObject.data.state == "Complete" && API.get("autoCompleteConstruction", false)) {
-                        this.addTask(this._task_completeBuild, null, "tap", buildingObject, 1);
+                    if (this._onCheckConstructionCompleted(buildingObject))
                         continue; // (nothing more to do here)
-                    }
 
-                    // ... check items counts and targets ...
-
-                    if (buildingObject.objData.Crafts && buildingObject.objData.Crafts != 'None') // (only check buildings that make crafts)
-                        for (var item of Seller.current.getItems())
-                            if (item.settings.target > 0) { // (only check item if this is set to allow turning off for specific items)
-
-                                var targetReached = API.getItemQuantity(item.name) >= API.toNumber(item.settings.target, 0);
-
-                                //if (targetReached)
-                                //    console.log(`Target ${item.name} reached, will try to stop production ...`);
-                                //else
-                                //    console.log(`${item.name} is getting too low, will try to get more ...`);
-
-                                var targetCraft = item.name;
-
-                                if (item.name == "Wood") { // (need to handle wood a special way)
-                                    var buildings = [Game.objectData["Windmill"]];
-                                    targetCraft = ""; // (any)
-                                    targetReached = !targetReached; // (invert this for wood - if we need more, turn off, not on!)
-                                }
-                                else buildings = [...item.settings.buildings];
-
-                                var buildingMatch = buildings.find(b => b.Name == buildingObject.objData.Name);
-                                if (!buildingMatch) continue; // (nothing to do with this building, move on)
-
-                                //var handled = true;
-
-                                if (targetReached) {
-                                    if ((!targetCraft || buildingObject.logicObject.data?.craft == targetCraft) && buildingObject.logicObject.data?.state != "Produce") {
-                                        this.addTask(this._task_turn_off, targetCraft, "stop", buildingObject);
-                                    }
-                                    //else handled = false;
-                                } else if (buildingObject.logicObject.data?.craft == "None") {
-                                    let craft = (<any>buildingObject.logicObject).prevCraft || targetCraft;
-                                    if (craft) {
-                                        this.addTask(this._task_turn_on, targetCraft, "start", buildingObject);
-                                    }
-                                    else console.log(`A ${buildingMatch.Name.replace(/_/g, ' ')} could not be turned on as the craft type is unknown.`);
-                                }
-
-                                //if (!handled)
-                                //    console.log("No building found that can be turned on/off to help with that.");
-                                // (else we can't complete the state change yet, so try next time)
-                            }
+                    //! this._checkTargets(buildingObject); NEEDS WORK TO PREVENT LEDGER ISSUES.
                 }
             }
         }
@@ -1953,8 +1965,8 @@ namespace TownstarExtensions {
             if (!API.townExists || this.processing) return;
             this.processing = true; // (just in case it takes too long and the timer triggers again)
             try {
-                //! this._onAmmountChanged(); NEEDS WORK TO PREVENT LEDGER ISSUES.
-                //! this._doTask(); NEEDS WORK TO PREVENT LEDGER ISSUES.
+                this._analyzeTownObjects();
+                this._doTask();
             }
             finally {
                 this.processing = false;
@@ -2052,7 +2064,7 @@ namespace TownstarExtensions {
             if (!this.started) {
                 this.started = true;
                 //? Game.app.on("StorageAmountChanged", this.__onAmmountChangedHandler || (this.__onAmmountChangedHandler = this._onAmmountChanged.bind(this)));
-                this._onAmmountChanged(); // (trigger it now once to make sure to get an update)
+                this._analyzeTownObjects(); // (trigger it now once to make sure to get an update)
                 console.log("TownManager started.");
                 return true;
             }
