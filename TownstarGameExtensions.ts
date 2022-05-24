@@ -6,7 +6,7 @@
 // ==UserScript==
 // @name         Town Star Extension Scripts
 // @description  Scripts to extends Town Star.
-// @version      2.11.0
+// @version      2.12.0
 // @author       General Fault
 // @match        *://*.sandbox-games.com/*
 // @run-at document-idle
@@ -17,7 +17,7 @@
 // ==/UserScript==
 //
 // Release notes: TownManager removed.
-var townstarExtensionsVersion = "2.11.0";
+var townstarExtensionsVersion = "2.12.0";
 var townstarExtensionsBotHost = "https://havenbot.ngrok.io";
 //var townstarExtensionsBotHost = "http://localhost:5531";
 
@@ -1953,8 +1953,8 @@ namespace TownstarExtensions {
             if (!API.townExists || this.processing) return;
             this.processing = true; // (just in case it takes too long and the timer triggers again)
             try {
-                this._onAmmountChanged();
-                this._doTask();
+                //! this._onAmmountChanged(); NEEDS WORK TO PREVENT LEDGER ISSUES.
+                //! this._doTask(); NEEDS WORK TO PREVENT LEDGER ISSUES.
             }
             finally {
                 this.processing = false;
@@ -2071,7 +2071,7 @@ namespace TownstarExtensions {
         }
     }
     export namespace TownManager {
-        //x API.register("Town Manager", TownManager); NEEDS WORK TO PREVENT LEDGER ISSUES.
+        API.register("Town Manager", TownManager);
     }
 }
 
