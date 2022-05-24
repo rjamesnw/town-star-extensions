@@ -6,7 +6,7 @@
 // ==UserScript==
 // @name         Town Star Extension Scripts
 // @description  Scripts to extends Town Star.
-// @version      2.10.0
+// @version      2.11.0
 // @author       General Fault
 // @match        *://*.sandbox-games.com/*
 // @run-at document-idle
@@ -16,8 +16,8 @@
 // @supportURL   https://discord.gg/eZmpyHxfnW
 // ==/UserScript==
 //
-// Release notes: Script is now opensource. Whitelisting no longer required.
-var townstarExtensionsVersion = "2.10.0";
+// Release notes: TownManager removed.
+var townstarExtensionsVersion = "2.11.0";
 var townstarExtensionsBotHost = "https://havenbot.ngrok.io";
 //var townstarExtensionsBotHost = "http://localhost:5531";
 
