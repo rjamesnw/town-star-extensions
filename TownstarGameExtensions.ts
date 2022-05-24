@@ -2071,7 +2071,7 @@ namespace TownstarExtensions {
         }
     }
     export namespace TownManager {
-        API.register("Town Manager", TownManager);
+        //x API.register("Town Manager", TownManager); NEEDS WORK TO PREVENT LEDGER ISSUES.
     }
 }
 
