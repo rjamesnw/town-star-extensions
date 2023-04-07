@@ -6,7 +6,7 @@
 // ==UserScript==
 // @name         Town Star Extension Scripts
 // @description  Scripts to extends Town Star.
-// @version      2.13.0
+// @version      2.13.1
 // @author       General Fault
 // @match        *://*.sandbox-games.com/*
 // @run-at document-idle
@@ -17,7 +17,7 @@
 // ==/UserScript==
 //
 // Release notes: Target system removed.
-var townstarExtensionsVersion = "2.13.0";
+var townstarExtensionsVersion = "2.13.1";
 var townstarExtensionsBotHost = "https://havenbot.ngrok.io";
 //var townstarExtensionsBotHost = "http://localhost:5531";
 
@@ -773,7 +773,6 @@ namespace TownstarExtensions {
         constructor(replacing: Analyzer) {
             if (replacing) {
                 this.currencyTrends = replacing.currencyTrends.slice();
-                this.currencyTrends = replacing.currencyTrends.slice();
                 for (var p in replacing.itemTrends) {
                     this.itemTrends[p] = replacing.itemTrends[p].slice();
                     if (replacing.avgStorageTrends)
@@ -833,7 +832,7 @@ namespace TownstarExtensions {
             var total = 0, count = 0;
             var _trends = !(timeLimit > 0) ? trends : trends.filter(t => Date.now() - t.time <= timeLimit).sort((a, b) => a.time - b.time);
             var minTime = _trends[0]?.time || 0, maxTime = _trends[_trends.length - 1]?.time || 0;
-            for (var i = _trends.length - 1; i > 0; --i) { // (start at latest time and walk backwards)
+            for (var i = _trends.length - 1; i >= 0; --i) { // (start at latest time and walk backwards)
                 let trend = trends[i];
                 if (trend.amount != 0) {
                     total += trend.amount;
@@ -1018,7 +1017,7 @@ namespace TownstarExtensions {
             var avgTrends = this.avgStorageTrends;
             var avgProdTrends = this.avgProductionTrends;
 
-            if (this.counter % 10 == 0) { // (no need to do this too often)
+            if (this.counter % 3 == 0) { // (no need to do this too often)
                 if (currencyTrends.length > 2) {
                     this.incomeChangeInfo_hrs = this.getChangeAvg(currencyTrends, 120 * 60 * 1000);
                     this.incomeChangeInfo_mins = this.getChangeAvg(currencyTrends, 2 * 60 * 1000);
@@ -1067,17 +1066,17 @@ namespace TownstarExtensions {
 
             ++this.counter;
 
-            while (currencyTrends.length > 0 && currencyTrends.length > this.span * 60)
-                currencyTrends.shift();
-            currencyTrends.push({ amount: 0, time: Date.now() }); // (keep pushing entries to signal nothing happening over time)
+            //x while (currencyTrends.length > 0 && currencyTrends.length > this.span * 60)
+            //x     currencyTrends.shift();
+            //x currencyTrends.push({ amount: 0, time: Date.now() }); // (keep pushing entries to signal nothing happening over time)
 
-            var crafts = API.getStoredCrafts();
-            if (crafts)
-                for (var p in crafts) {
-                    var trends = itemTrends[p] || (itemTrends[p] = []);
-                    while (trends.length > 0 && trends.length > this.span * 60) trends.shift();
-                    trends.push({ amount: 0, time: Date.now() }); // (keep pushing entries to signal nothing happening over time)
-                }
+            //x var crafts = API.getStoredCrafts();
+            //x if (crafts)
+            //x     for (var p in crafts) {
+            //x         var trends = itemTrends[p] || (itemTrends[p] = []);
+            //x         while (trends.length > 0 && trends.length > this.span * 60) trends.shift();
+            //x         trends.push({ amount: 0, time: Date.now() }); // (keep pushing entries to signal nothing happening over time)
+            //x     }
 
             // if (seller.getGas() <= analyzer.minGas && Game.currency <= analyzer.minGasCurrency) {
             // 	console.log(`Pausing the game: Min gas was reached at ${seller.getGas()} and currency is <= ${analyzer.minGasCurrency}.`);
@@ -1110,7 +1109,9 @@ namespace TownstarExtensions {
         reset() {
             this.currencyTrends = [];
             this.itemTrends = {};
+            this.productionItemTrends = {};
             this.avgStorageTrends = {};
+            this.avgProductionTrends = {};
             this.incomeChangeInfo_mins = null;
             this.negativeIncomeCounter = 0;
         }
@@ -1662,7 +1663,8 @@ namespace TownstarExtensions {
             }
             else {
                 console.warn("Nothing to sell yet.");
-                API.tradeEntity.enabled = false;
+                if (API.tradeEntity) // (becomes null after the game ends)
+                    API.tradeEntity.enabled = false;
                 this.waitCounter = API.get('waitCount', 3); // (let a bit more time to pass since nothing was found to sell)
             }
         }
